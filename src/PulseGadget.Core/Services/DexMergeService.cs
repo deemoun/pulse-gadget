@@ -24,7 +24,7 @@ public sealed class DexMergeService
         try
         {
             ZipFile.ExtractToDirectory(originalApkPath, tempDir);
-            var tempApk = Path.GetTempFileName();
+            var tempApk = Path.Combine(tempDir, "merged-output.apk");
 
             using (var rebuiltArchive = ZipFile.OpenRead(rebuiltApkPath))
             using (var outputArchive = ZipFile.Open(tempApk, ZipArchiveMode.Create))

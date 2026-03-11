@@ -179,10 +179,20 @@ public sealed class PatchPipelineService
                     var parent = Path.GetDirectoryName(request.ApkPath) ?? Directory.GetCurrentDirectory();
                     finalOutput = Path.Combine(parent, Path.GetFileNameWithoutExtension(request.ApkPath) + "-patched.apk");
                 }
+                else if (!Path.IsPathRooted(finalOutput))
+                {
+                    finalOutput = Path.Combine(Directory.GetCurrentDirectory(), finalOutput);
+                }
 
-                Directory.CreateDirectory(Path.GetDirectoryName(finalOutput) ?? Directory.GetCurrentDirectory());
+                var outputDir = Path.GetDirectoryName(finalOutput);
+                if (string.IsNullOrWhiteSpace(outputDir))
+                {
+                    outputDir = Directory.GetCurrentDirectory();
+                }
+
+                Directory.CreateDirectory(outputDir);
                 File.Copy(builtApk, finalOutput, overwrite: true);
-                result.OutputApkPath = finalOutput;
+                result.OutputApkPath = Path.GetFullPath(finalOutput);
 
                 if (request.Sign)
                 {
