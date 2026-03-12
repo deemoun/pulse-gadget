@@ -1,0 +1,57 @@
+name: Build binaries
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build ${{ matrix.target_name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target_name: Linux x64
+            os: ubuntu-latest
+            rid: linux-x64
+            artifact_name: pulse-gadget-linux-x64
+            script: ./scripts/publish-single-cli.sh --rid linux-x64
+          - target_name: Linux ARM64
+            os: ubuntu-latest
+            rid: linux-arm64
+            artifact_name: pulse-gadget-linux-arm64
+            script: ./scripts/publish-single-cli.sh --rid linux-arm64
+          - target_name: Windows x64
+            os: windows-latest
+            rid: win-x64
+            artifact_name: pulse-gadget-win-x64
+            script: ./scripts/publish-single-cli-win.ps1 -Rid win-x64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Publish binary (Linux)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          chmod +x ./scripts/publish-single-cli.sh
+          ${{ matrix.script }}
+
+      - name: Publish binary (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          ${{ matrix.script }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: artifacts/cli/${{ matrix.rid }}
+          if-no-files-found: error
